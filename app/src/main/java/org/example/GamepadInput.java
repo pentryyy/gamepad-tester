@@ -1,5 +1,8 @@
 package org.example;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import com.github.strikerx3.jxinput.XInputAxes;
 import com.github.strikerx3.jxinput.XInputButtons;
 import com.github.strikerx3.jxinput.XInputComponents;
@@ -13,14 +16,64 @@ import lombok.Getter;
 @Getter
 public class GamepadInput {
 
+    private int     vibrationStrength = 32767;
+
+    private Boolean isTimerRunning    = false;
+    private Timer   timer;
+
     private String  errorMessage;
-    private Boolean isButtonPressedA, isButtonPressedB, isButtonPressedX, isButtonPressedY;
+
+    private Boolean isButtonPressedA, isButtonPressedB, 
+                    isButtonPressedX, isButtonPressedY;
+    
+    private Boolean isButtonPressedArrowUp, isButtonPressedArrowDown, 
+                    isButtonPressedArrowLeft, isButtonPressedArrowRight;
+
+    private Boolean isButtonPressedLeftBumper, isButtonPressedRightBumper;
     private Boolean isButtonPressedLS, isButtonPressedRS;
     private Boolean isButtonPressedBack, isButtonPressedStart;
     private Boolean isButtonPressedGuide, isButtonPressedUnknown;
-    private Boolean isButtonPressedArrowUp, isButtonPressedArrowDown, isButtonPressedArrowLeft, isButtonPressedArrowRight;
     private float   leftStickAxisX, leftStickAxisY;
     private float   rightStickAxisX, rightStickAxisY;
+    private int     leftTriggerRawData, rightTriggerRawData;
+    
+    private void startTimer() {
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+
+            @Override
+            public void run() {
+                System.exit(0);
+            }
+        }, 5000);
+    }
+
+    private void stopTimer() {
+        if (timer != null) {
+            timer.cancel();
+        }
+    }
+
+    // Выход через 5 секунд при удержании LS + RS
+    public void exitFromApp() {
+        if (isButtonPressedLS && isButtonPressedRS) {
+            if (!isTimerRunning) {
+                startTimer();
+                isTimerRunning = true;
+            }
+        } else {
+            isTimerRunning = false;
+            stopTimer();
+        }
+    }
+
+    public int getVibrationStrength() {
+        return vibrationStrength;
+    }
+
+    public void setVibrationStrength(int vibrationStrength) {
+        this.vibrationStrength = vibrationStrength;
+    }
     
     public boolean isXInputAvailable() {
         if (XInputDevice.isAvailable() || XInputDevice14.isAvailable()) {
@@ -41,10 +94,9 @@ public class GamepadInput {
             XInputAxes       axes       = components.getAxes();
 
             if (device.poll()) {
-                StringBuilder status = new StringBuilder();
 
-                int ltRaw = axes.getRaw(XInputAxis.LEFT_TRIGGER);
-                int rtRaw = axes.getRaw(XInputAxis.RIGHT_TRIGGER);
+                leftTriggerRawData  = axes.getRaw(XInputAxis.LEFT_TRIGGER);
+                rightTriggerRawData = axes.getRaw(XInputAxis.RIGHT_TRIGGER);
 
                 leftStickAxisX = axes.get(XInputAxis.LEFT_THUMBSTICK_X);
                 leftStickAxisY = axes.get(XInputAxis.LEFT_THUMBSTICK_Y);
@@ -71,38 +123,21 @@ public class GamepadInput {
                 isButtonPressedArrowLeft  = buttons.left ? true : false;
                 isButtonPressedArrowRight = buttons.right ? true : false;
 
-                status.append("Кнопка unknown - " + isButtonPressedUnknown + " ");
-
-                if (buttons.lShoulder) {
-                    status.append("Кнопка LB нажата ");
-                }
-
-                if (buttons.rShoulder) {
-                    status.append("Кнопка RB нажата ");
-                }
+                isButtonPressedLeftBumper  = buttons.lShoulder ? true : false;
+                isButtonPressedRightBumper = buttons.rShoulder ? true : false;
 
                 // Вибрация по LB + RB
                 if (buttons.lShoulder && buttons.rShoulder) {
-                    int leftMotor  = 256;
-                    int rightMotor = 256;
+                    int leftMotor  = vibrationStrength;
+                    int rightMotor = vibrationStrength;
 
                     device.setVibration(leftMotor, rightMotor);
                 } else {
                     device.setVibration(0, 0);
                 }
-                
-                status.append("\n")
-                        .append(String.format("LT: %d  RT: %d", ltRaw, rtRaw))
-                        .append("\n")
-                        .append(String.format("Левый стик: X=%.6f Y=%.6f", leftStickAxisX, leftStickAxisY))
-                        .append("\n")
-                        .append(String.format("Правый стик: X=%.6f Y=%.6f", rightStickAxisX, rightStickAxisY))
-                        .append("\n");
-                
-                System.out.print(status);
             }
         } else {
-            System.out.println("Контроллер не подключен");
+            errorMessage = "Контроллер не подключен";
         }
     }
 }

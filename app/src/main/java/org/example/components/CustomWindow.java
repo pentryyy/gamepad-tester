@@ -1,4 +1,4 @@
-package org.example;
+package org.example.components;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -18,12 +18,14 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 
+import org.example.GamepadInput;
+
 import com.github.strikerx3.jxinput.exceptions.XInputNotLoadedException;
 
 public class CustomWindow {
 
     private JFrame frame;
-    private Point point;
+    private Point  point;
 
     public CustomWindow() {
         initializeUI();
@@ -75,7 +77,7 @@ public class CustomWindow {
         CircleWithLetter buttonBack = new CircleWithLetter("back", 10, 26,  349, 187);
         CircleWithLetter buttonStart = new CircleWithLetter("start", 10, 26,  426, 187);
 
-        ShapeFromImage buttonGuide   = new ShapeFromImage("xbox-logo.png", 42, 41,  380, 129, Color.WHITE);
+        ShapeFromImage buttonGuide   = new ShapeFromImage("xbox-logo.png", 41, 41,  380, 129, Color.WHITE);
         ShapeFromImage buttonUnknown = new ShapeFromImage("share-button.png", 34, 20,  384, 219, new Color(255, 255, 255, 0));
 
         RectangleWithLetter buttonArrowUp    = new RectangleWithLetter("↑", 18, 25, 29, 6, 0, 318, 247);
@@ -83,11 +85,23 @@ public class CustomWindow {
         RectangleWithLetter buttonArrowLeft  = new RectangleWithLetter("↑", 18, 25, 29, 6, 270, 291, 274);
         RectangleWithLetter buttonArrowRight = new RectangleWithLetter("↑", 18, 25, 29, 6, 90, 346, 274);
 
-
-        JLabel info = new JLabel("Выход на LS + RS", SwingConstants.CENTER);
-        info.setBounds(330, 10, 140, 20);
+        ShapeFromImage buttonLeftBumper  = new ShapeFromImage("xbox-lb.png", 50, 50,  250, 60, new Color(255, 255, 255, 0));
+        ShapeFromImage buttonRightBumper = new ShapeFromImage("xbox-rb.png", 50, 50,  500, 60, new Color(255, 255, 255, 0));
 
         GamepadInput gamepadInput = new GamepadInput();
+
+        CustomSlider customSlider = new CustomSlider(0, 65535, gamepadInput.getVibrationStrength());
+        customSlider.setBounds(300, 50, 200, 20);
+
+        JLabel infoString1 = new JLabel("Выход на LS + RS (Удерживать 5 секунд)", SwingConstants.CENTER);
+        infoString1.setBounds(280, 10, 240, 20);
+
+        JLabel infoString2 = new JLabel("Вибрация на LB + RB (Сила вибрации " + customSlider.getValue() + " )", SwingConstants.CENTER);
+        infoString2.setBounds(260, 30, 280, 20);
+
+        customSlider.getSlider().addChangeListener(e -> {
+            infoString2.setText("Вибрация на LB + RB (Сила вибрации " + customSlider.getValue() + " )");
+        });
 
         Thread gamepadThread = new Thread(() -> {
             try {
@@ -144,9 +158,12 @@ public class CustomWindow {
                     buttonArrowLeft.showButton(gamepadInput.getIsButtonPressedArrowLeft());
                     buttonArrowRight.showButton(gamepadInput.getIsButtonPressedArrowRight());
 
-                    if (gamepadInput.getIsButtonPressedLS() && gamepadInput.getIsButtonPressedRS()) {
-                        System.exit(0);
-                    }
+                    buttonLeftBumper.showButton(gamepadInput.getIsButtonPressedLeftBumper());
+                    buttonRightBumper.showButton(gamepadInput.getIsButtonPressedRightBumper());
+
+                    gamepadInput.setVibrationStrength(customSlider.getValue());
+
+                    gamepadInput.exitFromApp();
                 }
             } catch (XInputNotLoadedException e) {
                 System.err.println("Ошибка загрузки XInput: " + e.getMessage());
@@ -177,7 +194,12 @@ public class CustomWindow {
         contentPanel.add(buttonArrowLeft);
         contentPanel.add(buttonArrowRight);
 
-        contentPanel.add(info);
+        contentPanel.add(buttonLeftBumper);
+        contentPanel.add(buttonRightBumper);
+
+        contentPanel.add(infoString1);
+        contentPanel.add(infoString2);
+        contentPanel.add(customSlider.getSlider());
         contentPanel.add(imageLabel, BorderLayout.CENTER);
         frame.add(contentPanel);
         // ----------------------------Контент внутри окна-------------------------
@@ -185,27 +207,17 @@ public class CustomWindow {
         // Добавляем кнопки управления окном
         JButton closeButton    = new JButton();
         JButton minimizeButton = new JButton();
-        JButton maximizeButton = new JButton();
 
         styleButton(closeButton, Color.RED, "icon-close.png", 16);
         styleButton(minimizeButton, Color.LIGHT_GRAY, "icon-minimize.png", 16);
-        styleButton(maximizeButton, Color.LIGHT_GRAY, "icon-maximize.png", 16);
 
         closeButton.addActionListener(e -> System.exit(0));
         minimizeButton.addActionListener(e -> frame.setState(Frame.ICONIFIED));
-        // maximizeButton.addActionListener(e -> {
-        //     if (frame.getExtendedState() == JFrame.MAXIMIZED_BOTH) {
-        //         frame.setExtendedState(JFrame.NORMAL);
-        //     } else {
-        //         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-        //     }
-        // });
 
         // Создаем панель для кнопок
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         buttonPanel.setOpaque(false);
         buttonPanel.add(minimizeButton);
-        buttonPanel.add(maximizeButton);
         buttonPanel.add(closeButton);
 
         // Создаем панель заголовка
