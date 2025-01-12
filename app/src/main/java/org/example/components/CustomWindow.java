@@ -52,7 +52,7 @@ public class CustomWindow {
         ImageIcon imageIcon = new ImageIcon(
             getClass().
             getClassLoader().
-            getResource("gamepad_photo.jpg"));
+            getResource("gamepad_photo.jpeg"));
 
         ImageIcon scaledIcon = new ImageIcon(
             imageIcon.getImage()
@@ -74,33 +74,39 @@ public class CustomWindow {
         CircleWithLetter buttonLS = new CircleWithLetter("LS", 18, 60,  234, 171, 3);
         CircleWithLetter buttonRS = new CircleWithLetter("RS", 18, 60,  441, 250, 3);
 
-        CircleWithLetter buttonBack = new CircleWithLetter("back", 10, 26,  349, 187);
-        CircleWithLetter buttonStart = new CircleWithLetter("start", 10, 26,  426, 187);
+        ShapeFromImage buttonBack = new ShapeFromImage("xbox-back.png", 28, 28,  349, 186);
+        ShapeFromImage buttonStart = new ShapeFromImage("xbox-start.png", 26, 26,  426, 186);
 
         ShapeFromImage buttonGuide   = new ShapeFromImage("xbox-logo.png", 41, 41,  380, 129, Color.WHITE);
-        ShapeFromImage buttonUnknown = new ShapeFromImage("share-button.png", 34, 20,  384, 219, new Color(255, 255, 255, 0));
+        ShapeFromImage buttonUnknown = new ShapeFromImage("share-button.png", 34, 20,  384, 219);
 
         RectangleWithLetter buttonArrowUp    = new RectangleWithLetter("↑", 18, 25, 29, 6, 0, 318, 247);
         RectangleWithLetter buttonArrowDown  = new RectangleWithLetter("↑", 18, 25, 29, 6, 180, 318, 300);
         RectangleWithLetter buttonArrowLeft  = new RectangleWithLetter("↑", 18, 25, 29, 6, 270, 291, 274);
         RectangleWithLetter buttonArrowRight = new RectangleWithLetter("↑", 18, 25, 29, 6, 90, 346, 274);
 
-        ShapeFromImage buttonLeftBumper  = new ShapeFromImage("xbox-lb.png", 50, 50,  250, 60, new Color(255, 255, 255, 0));
-        ShapeFromImage buttonRightBumper = new ShapeFromImage("xbox-rb.png", 50, 50,  500, 60, new Color(255, 255, 255, 0));
+        ShapeFromImage buttonLeftBumper  = new ShapeFromImage("xbox-lb.png", 50, 50,  250, 60);
+        ShapeFromImage buttonRightBumper = new ShapeFromImage("xbox-rb.png", 50, 50,  500, 60);
+
+        ShapeFromImage buttonLeftTrigger  = new ShapeFromImage("xbox-lt.png", 50, 50,  250, 20);
+        ShapeFromImage buttonRightTrigger = new ShapeFromImage("xbox-rt.png", 50, 50,  500, 20);
 
         GamepadInput gamepadInput = new GamepadInput();
 
         CustomSlider customSlider = new CustomSlider(0, 65535, gamepadInput.getVibrationStrength());
-        customSlider.setBounds(300, 50, 200, 20);
+        customSlider.setBounds(300, 440, 200, 20);
 
-        JLabel infoString1 = new JLabel("Выход на LS + RS (Удерживать 5 секунд)", SwingConstants.CENTER);
-        infoString1.setBounds(280, 10, 240, 20);
+        JLabel infoString1 = new JLabel("Выход на LS + RS (Удерживать)", SwingConstants.CENTER);
+        infoString1.setBounds(300, 10, 200, 20);
 
-        JLabel infoString2 = new JLabel("Вибрация на LB + RB (Сила вибрации " + customSlider.getValue() + " )", SwingConstants.CENTER);
-        infoString2.setBounds(260, 30, 280, 20);
+        JLabel infoString2 = new JLabel("", SwingConstants.CENTER);
+        infoString2.setBounds(300, 30, 200, 20);
+
+        JLabel infoString3 = new JLabel("Вибрация на LB + RB (Сила вибрации " + customSlider.getValue() + " )", SwingConstants.CENTER);
+        infoString3.setBounds(260, 420, 280, 20);
 
         customSlider.getSlider().addChangeListener(e -> {
-            infoString2.setText("Вибрация на LB + RB (Сила вибрации " + customSlider.getValue() + " )");
+            infoString3.setText("Вибрация на LB + RB (Сила вибрации " + customSlider.getValue() + " )");
         });
 
         Thread gamepadThread = new Thread(() -> {
@@ -161,9 +167,18 @@ public class CustomWindow {
                     buttonLeftBumper.showButton(gamepadInput.getIsButtonPressedLeftBumper());
                     buttonRightBumper.showButton(gamepadInput.getIsButtonPressedRightBumper());
 
+                    buttonLeftTrigger.setTransparencyFromIntensity(gamepadInput.getLeftTriggerRawData());
+                    buttonRightTrigger.setTransparencyFromIntensity(gamepadInput.getRightTriggerRawData());
+
                     gamepadInput.setVibrationStrength(customSlider.getValue());
 
                     gamepadInput.exitFromApp();
+
+                    if (gamepadInput.getIsTimerRunning()) {
+                        infoString2.setText("Выход через " + (int) (gamepadInput.getCountdown() + 1) + " (секунд)");
+                    } else {
+                        infoString2.setText("");
+                    }
                 }
             } catch (XInputNotLoadedException e) {
                 System.err.println("Ошибка загрузки XInput: " + e.getMessage());
@@ -197,8 +212,12 @@ public class CustomWindow {
         contentPanel.add(buttonLeftBumper);
         contentPanel.add(buttonRightBumper);
 
+        contentPanel.add(buttonLeftTrigger);
+        contentPanel.add(buttonRightTrigger);
+
         contentPanel.add(infoString1);
         contentPanel.add(infoString2);
+        contentPanel.add(infoString3);
         contentPanel.add(customSlider.getSlider());
         contentPanel.add(imageLabel, BorderLayout.CENTER);
         frame.add(contentPanel);

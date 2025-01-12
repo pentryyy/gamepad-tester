@@ -41,29 +41,8 @@ public class RectangleWithLetter extends JPanel {
         this.setOpaque(false);
     }
 
-    public void setColorFromIntensity(int colorIntensive) {
-        // Убедимся, что интенсивность в диапазоне [0, 255]
-        colorIntensive = Math.max(0, Math.min(255, colorIntensive));
-
-        // Интенсивность цвета (0 = белый, 255 = черный)
-        int intensityValue = 255 - colorIntensive;
-
-        fillColor = new Color(intensityValue, intensityValue, intensityValue);
-        repaint();
-    }
-
     public void showButton(Boolean state) { 
         this.setVisible(state);
-    }
-
-    public void setLetter(String letter) {
-        this.letter = letter;
-        repaint();
-    }
-
-    public void setColorByDefault() {
-        fillColor = Color.BLACK;
-        repaint();
     }
 
     @Override

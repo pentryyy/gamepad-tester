@@ -16,6 +16,7 @@ import lombok.Getter;
 @Getter
 public class GamepadInput {
 
+    private int     countdown;
     private int     vibrationStrength = 32767;
 
     private Boolean isTimerRunning    = false;
@@ -38,14 +39,20 @@ public class GamepadInput {
     private int     leftTriggerRawData, rightTriggerRawData;
     
     private void startTimer() {
+        countdown = 5;
+
         timer = new Timer();
-        timer.schedule(new TimerTask() {
+        timer.scheduleAtFixedRate(new TimerTask() {
 
             @Override
             public void run() {
-                System.exit(0);
+                if (countdown > 0) {
+                    countdown--;
+                } else {
+                    System.exit(0);
+                }
             }
-        }, 5000);
+        }, 0, 1000); // Интервал обновления - 1 секунда
     }
 
     private void stopTimer() {
@@ -65,10 +72,6 @@ public class GamepadInput {
             isTimerRunning = false;
             stopTimer();
         }
-    }
-
-    public int getVibrationStrength() {
-        return vibrationStrength;
     }
 
     public void setVibrationStrength(int vibrationStrength) {

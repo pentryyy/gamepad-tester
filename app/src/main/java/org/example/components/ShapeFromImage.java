@@ -1,5 +1,6 @@
 package org.example.components;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -12,8 +13,21 @@ import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
 public class ShapeFromImage extends JPanel {
-    private String filePath;      // Путь к файлу картики
-    private int    width, height; // Ширина и высота изображения
+
+    private int    transparency = 255; // По умолчанию фигура непрозрачна
+    private String filePath;           // Путь к файлу картики
+    private int    width, height;      // Ширина и высота изображения
+
+    public ShapeFromImage(
+        String filePath, int width, int height, 
+        int offsetX, int offsetY) {
+        
+        this.filePath = filePath;
+        this.width = width;
+        this.height = height;
+        this.setBounds(offsetX, offsetY, width, height);
+        this.setOpaque(false);
+    }
 
     public ShapeFromImage(
         String filePath, int width, int height, 
@@ -28,6 +42,12 @@ public class ShapeFromImage extends JPanel {
 
     public void showButton(Boolean state) { 
         this.setVisible(state);
+    }
+
+    public void setTransparencyFromIntensity(int transparencyIntensive) {
+        // Убедимся, что значение в диапазоне [0, 255]
+        transparency = Math.max(0, Math.min(255, transparencyIntensive));
+        repaint(); // Обновляем компонент после изменения прозрачности
     }
 
     @Override
@@ -51,6 +71,9 @@ public class ShapeFromImage extends JPanel {
 
             int x = (getWidth() - width) / 2;   // Центрируем по ширине
             int y = (getHeight() - height) / 2; // Центрируем по высоте
+
+            // Устанавливаем прозрачность
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, transparency / 255f));
 
             g2d.drawImage(resizedImg, x, y, this);
         } catch (IOException e) {
