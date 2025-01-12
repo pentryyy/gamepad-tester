@@ -13,23 +13,25 @@ import lombok.Getter;
 @Getter
 public class GamepadInput {
 
+    private String  errorMessage;
     private Boolean isButtonPressedA, isButtonPressedB, isButtonPressedX, isButtonPressedY;
     private Boolean isButtonPressedLS, isButtonPressedRS;
     private Boolean isButtonPressedBack, isButtonPressedStart;
+    private Boolean isButtonPressedGuide, isButtonPressedUnknown;
+    private Boolean isButtonPressedArrowUp, isButtonPressedArrowDown, isButtonPressedArrowLeft, isButtonPressedArrowRight;
+    private float   leftStickAxisX, leftStickAxisY;
+    private float   rightStickAxisX, rightStickAxisY;
     
     public boolean isXInputAvailable() {
         if (XInputDevice.isAvailable() || XInputDevice14.isAvailable()) {
             return true;
         }
+
+        errorMessage = "Не поддерживаются необходимые протоколы XInput";
         return false;
     }
 
     public void handleXInput() throws XInputNotLoadedException {
-        // if (!isXInputAvailable()) {
-        //     System.out.println("Не поддерживаются необходимые протоколы XInput");
-        //     return;
-        // }
-
         XInputDevice device = XInputDevice.getDeviceFor(0);
     
         if (device.isConnected()) {
@@ -44,10 +46,11 @@ public class GamepadInput {
                 int ltRaw = axes.getRaw(XInputAxis.LEFT_TRIGGER);
                 int rtRaw = axes.getRaw(XInputAxis.RIGHT_TRIGGER);
 
-                float lx = axes.get(XInputAxis.LEFT_THUMBSTICK_X);
-                float ly = axes.get(XInputAxis.LEFT_THUMBSTICK_Y);
-                float rx = axes.get(XInputAxis.RIGHT_THUMBSTICK_X);
-                float ry = axes.get(XInputAxis.RIGHT_THUMBSTICK_Y);
+                leftStickAxisX = axes.get(XInputAxis.LEFT_THUMBSTICK_X);
+                leftStickAxisY = axes.get(XInputAxis.LEFT_THUMBSTICK_Y);
+                
+                rightStickAxisX = axes.get(XInputAxis.RIGHT_THUMBSTICK_X);
+                rightStickAxisY = axes.get(XInputAxis.RIGHT_THUMBSTICK_Y);
 
                 isButtonPressedA = buttons.a ? true : false;
                 isButtonPressedB = buttons.b ? true : false;
@@ -60,34 +63,22 @@ public class GamepadInput {
                 isButtonPressedBack  = buttons.back ? true : false;
                 isButtonPressedStart = buttons.start ? true : false;
 
+                isButtonPressedGuide   = buttons.guide ? true : false;
+                isButtonPressedUnknown = buttons.unknown ? true : false;
+
+                isButtonPressedArrowUp    = buttons.up ? true : false;
+                isButtonPressedArrowDown  = buttons.down ? true : false;
+                isButtonPressedArrowLeft  = buttons.left ? true : false;
+                isButtonPressedArrowRight = buttons.right ? true : false;
+
+                status.append("Кнопка unknown - " + isButtonPressedUnknown + " ");
+
                 if (buttons.lShoulder) {
                     status.append("Кнопка LB нажата ");
                 }
 
                 if (buttons.rShoulder) {
                     status.append("Кнопка RB нажата ");
-                }
-
-                if (buttons.up) {
-                    status.append("Стрелка вверх нажата ");
-                }
-
-                if (buttons.down) {
-                    status.append("Стрелка вниз нажата ");
-                }
-
-                if (buttons.left) {
-                    status.append("Стрелка влево нажата ");
-                }
-
-                if (buttons.right) {
-                    status.append("Стрелка вправо нажата ");
-                }
-
-                if (XInputDevice.isGuideButtonSupported()) {
-                    if (buttons.guide) {
-                        status.append("Кнопка Guide нажата ");
-                    }
                 }
 
                 // Вибрация по LB + RB
@@ -103,9 +94,9 @@ public class GamepadInput {
                 status.append("\n")
                         .append(String.format("LT: %d  RT: %d", ltRaw, rtRaw))
                         .append("\n")
-                        .append(String.format("Левый стик: X=%.6f Y=%.6f", lx, ly))
+                        .append(String.format("Левый стик: X=%.6f Y=%.6f", leftStickAxisX, leftStickAxisY))
                         .append("\n")
-                        .append(String.format("Правый стик: X=%.6f Y=%.6f", rx, ry))
+                        .append(String.format("Правый стик: X=%.6f Y=%.6f", rightStickAxisX, rightStickAxisY))
                         .append("\n");
                 
                 System.out.print(status);

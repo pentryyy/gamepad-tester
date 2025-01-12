@@ -64,16 +64,28 @@ public class CustomWindow {
         imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
         imageLabel.setVerticalAlignment(SwingConstants.CENTER);
 
-        CircleWithLetter buttonA = new CircleWithLetter("A", 24, 40,  515, 215, Color.WHITE);
-        CircleWithLetter buttonB = new CircleWithLetter("B", 24, 40,  550, 181, Color.WHITE);
-        CircleWithLetter buttonX = new CircleWithLetter("X", 24, 40,  480, 181, Color.WHITE);
-        CircleWithLetter buttonY = new CircleWithLetter("Y", 24, 40,  515, 148, Color.WHITE);
+        CircleWithLetter buttonA = new CircleWithLetter("A", 18, 40,  515, 215);
+        CircleWithLetter buttonB = new CircleWithLetter("B", 18, 40,  550, 181);
+        CircleWithLetter buttonX = new CircleWithLetter("X", 18, 40,  480, 181);
+        CircleWithLetter buttonY = new CircleWithLetter("Y", 18, 40,  515, 148);
 
-        CircleWithLetter buttonBack = new CircleWithLetter("back", 10, 26,  349, 187, Color.WHITE);
-        CircleWithLetter buttonStart = new CircleWithLetter("start", 10, 26,  426, 187, Color.WHITE);
+        CircleWithLetter buttonLS = new CircleWithLetter("LS", 18, 60,  234, 171, 3);
+        CircleWithLetter buttonRS = new CircleWithLetter("RS", 18, 60,  441, 250, 3);
+
+        CircleWithLetter buttonBack = new CircleWithLetter("back", 10, 26,  349, 187);
+        CircleWithLetter buttonStart = new CircleWithLetter("start", 10, 26,  426, 187);
+
+        ShapeFromImage buttonGuide   = new ShapeFromImage("xbox-logo.png", 42, 41,  380, 129, Color.WHITE);
+        ShapeFromImage buttonUnknown = new ShapeFromImage("share-button.png", 34, 20,  384, 219, new Color(255, 255, 255, 0));
+
+        RectangleWithLetter buttonArrowUp    = new RectangleWithLetter("↑", 18, 25, 29, 6, 0, 318, 247);
+        RectangleWithLetter buttonArrowDown  = new RectangleWithLetter("↑", 18, 25, 29, 6, 180, 318, 300);
+        RectangleWithLetter buttonArrowLeft  = new RectangleWithLetter("↑", 18, 25, 29, 6, 270, 291, 274);
+        RectangleWithLetter buttonArrowRight = new RectangleWithLetter("↑", 18, 25, 29, 6, 90, 346, 274);
+
 
         JLabel info = new JLabel("Выход на LS + RS", SwingConstants.CENTER);
-        info.setBounds(330, 10, 140, 30);
+        info.setBounds(330, 10, 140, 20);
 
         GamepadInput gamepadInput = new GamepadInput();
 
@@ -81,27 +93,64 @@ public class CustomWindow {
             try {
                 while (true) {
                     gamepadInput.handleXInput();
+                    
+                    float leftStickAxisX = gamepadInput.getLeftStickAxisX();
+                    float leftStickAxisY = gamepadInput.getLeftStickAxisY();
+
+                    float rightStickAxisX = gamepadInput.getRightStickAxisX();
+                    float rightStickAxisY = gamepadInput.getRightStickAxisY();
 
                     buttonA.showButton(gamepadInput.getIsButtonPressedA());
                     buttonB.showButton(gamepadInput.getIsButtonPressedB());
                     buttonX.showButton(gamepadInput.getIsButtonPressedX());
                     buttonY.showButton(gamepadInput.getIsButtonPressedY());
 
+                    buttonLS.setOffsetsXY(
+                        buttonLS.getOffsetX() + (int) (leftStickAxisX * 10),
+                        buttonLS.getOffsetY() - (int) (leftStickAxisY * 10));
+                    if (gamepadInput.getIsButtonPressedLS()) {
+                        buttonLS.setLetter("LS");
+                        buttonLS.setColorByDefault();
+                    } else if(leftStickAxisX != 0 || leftStickAxisY != 0) {
+                        float colorIntensive = Math.abs(leftStickAxisX) > Math.abs(leftStickAxisY) ? leftStickAxisX : leftStickAxisY;
+                        
+                        buttonLS.setLetter("");
+                        buttonLS.setColorFromIntensity(colorIntensive);
+                        buttonLS.showButton(true);
+                    }
+                    
+                    buttonRS.setOffsetsXY(
+                        buttonRS.getOffsetX() + (int) (rightStickAxisX * 10),
+                        buttonRS.getOffsetY() - (int) (rightStickAxisY * 10));
+                    if (gamepadInput.getIsButtonPressedRS()) {
+                        buttonRS.setLetter("RS");
+                        buttonRS.setColorByDefault();
+                    } else if(rightStickAxisX != 0 || rightStickAxisY != 0) {
+                        float colorIntensive = Math.abs(rightStickAxisX) > Math.abs(rightStickAxisY) ? rightStickAxisX : rightStickAxisY;
+                        
+                        buttonRS.setLetter("");
+                        buttonRS.setColorFromIntensity(colorIntensive);
+                        buttonRS.showButton(true);
+                    }
+
                     buttonBack.showButton(gamepadInput.getIsButtonPressedBack());
                     buttonStart.showButton(gamepadInput.getIsButtonPressedStart());
+
+                    buttonGuide.showButton(gamepadInput.getIsButtonPressedGuide());
+                    buttonUnknown.showButton(gamepadInput.getIsButtonPressedUnknown());
+
+                    buttonArrowUp.showButton(gamepadInput.getIsButtonPressedArrowUp());
+                    buttonArrowDown.showButton(gamepadInput.getIsButtonPressedArrowDown());
+                    buttonArrowLeft.showButton(gamepadInput.getIsButtonPressedArrowLeft());
+                    buttonArrowRight.showButton(gamepadInput.getIsButtonPressedArrowRight());
 
                     if (gamepadInput.getIsButtonPressedLS() && gamepadInput.getIsButtonPressedRS()) {
                         System.exit(0);
                     }
-
-                    Thread.sleep(0);
                 }
             } catch (XInputNotLoadedException e) {
                 System.err.println("Ошибка загрузки XInput: " + e.getMessage());
                 e.printStackTrace();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                System.err.println("Поток был прерван.");
             }
         });
 
@@ -113,8 +162,20 @@ public class CustomWindow {
         contentPanel.add(buttonX);
         contentPanel.add(buttonY);
 
+        contentPanel.add(buttonLS);
+        contentPanel.add(buttonRS);
+
         contentPanel.add(buttonBack);
         contentPanel.add(buttonStart);
+
+        contentPanel.add(buttonGuide);
+        contentPanel.add(buttonUnknown);
+
+        contentPanel.add(buttonArrowUp);
+        contentPanel.add(buttonArrowDown);
+
+        contentPanel.add(buttonArrowLeft);
+        contentPanel.add(buttonArrowRight);
 
         contentPanel.add(info);
         contentPanel.add(imageLabel, BorderLayout.CENTER);
@@ -132,13 +193,13 @@ public class CustomWindow {
 
         closeButton.addActionListener(e -> System.exit(0));
         minimizeButton.addActionListener(e -> frame.setState(Frame.ICONIFIED));
-        maximizeButton.addActionListener(e -> {
-            if (frame.getExtendedState() == JFrame.MAXIMIZED_BOTH) {
-                frame.setExtendedState(JFrame.NORMAL);
-            } else {
-                frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-            }
-        });
+        // maximizeButton.addActionListener(e -> {
+        //     if (frame.getExtendedState() == JFrame.MAXIMIZED_BOTH) {
+        //         frame.setExtendedState(JFrame.NORMAL);
+        //     } else {
+        //         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        //     }
+        // });
 
         // Создаем панель для кнопок
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
