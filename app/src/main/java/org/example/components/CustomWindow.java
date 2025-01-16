@@ -96,24 +96,24 @@ public class CustomWindow {
         CustomSlider customSlider = new CustomSlider(0, 65535, gamepadInput.getVibrationStrength());
         customSlider.setBounds(300, 440, 200, 20);
 
-        JLabel infoString1 = new JLabel("Выход на LS + RS (Удерживать)", SwingConstants.CENTER);
-        infoString1.setBounds(300, 10, 200, 20);
+        JLabel exitInfo = new JLabel("Выход на LS + RS (Удерживать)", SwingConstants.CENTER);
+        exitInfo.setBounds(300, 10, 200, 20);
 
-        JLabel infoString2 = new JLabel("", SwingConstants.CENTER);
-        infoString2.setBounds(300, 30, 200, 20);
+        JLabel exitCountdownInfo = new JLabel("", SwingConstants.CENTER);
+        exitCountdownInfo.setBounds(300, 30, 200, 20);
 
-        JLabel infoString3 = new JLabel("Вибрация на LB + RB (Сила вибрации " + customSlider.getValue() + " )", SwingConstants.CENTER);
-        infoString3.setBounds(260, 420, 280, 20);
+        JLabel vibrationInfo = new JLabel("Вибрация на LB + RB (Сила вибрации " + customSlider.getValue() + " )", SwingConstants.CENTER);
+        vibrationInfo.setBounds(260, 420, 280, 20);
 
         customSlider.getSlider().addChangeListener(e -> {
-            infoString3.setText("Вибрация на LB + RB (Сила вибрации " + customSlider.getValue() + " )");
+            vibrationInfo.setText("Вибрация на LB + RB (Сила вибрации " + customSlider.getValue() + " )");
         });
 
         Thread gamepadThread = new Thread(() -> {
             try {
                 while (true) {
                     gamepadInput.handleXInput();
-                    
+
                     float leftStickAxisX = gamepadInput.getLeftStickAxisX();
                     float leftStickAxisY = gamepadInput.getLeftStickAxisY();
 
@@ -175,15 +175,12 @@ public class CustomWindow {
                     gamepadInput.exitFromApp();
 
                     if (gamepadInput.getIsTimerRunning()) {
-                        infoString2.setText("Выход через " + (int) (gamepadInput.getCountdown() + 1) + " (секунд)");
+                        exitCountdownInfo.setText("Выход через " + (int) (gamepadInput.getCountdown() + 1) + " (секунд)");
                     } else {
-                        infoString2.setText("");
+                        exitCountdownInfo.setText("");
                     }
                 }
-            } catch (XInputNotLoadedException e) {
-                System.err.println("Ошибка загрузки XInput: " + e.getMessage());
-                e.printStackTrace();
-            }
+            } catch (XInputNotLoadedException e) {}
         });
 
         gamepadThread.start();
@@ -215,9 +212,9 @@ public class CustomWindow {
         contentPanel.add(buttonLeftTrigger);
         contentPanel.add(buttonRightTrigger);
 
-        contentPanel.add(infoString1);
-        contentPanel.add(infoString2);
-        contentPanel.add(infoString3);
+        contentPanel.add(exitInfo);
+        contentPanel.add(exitCountdownInfo);
+        contentPanel.add(vibrationInfo);
         contentPanel.add(customSlider.getSlider());
         contentPanel.add(imageLabel, BorderLayout.CENTER);
         frame.add(contentPanel);

@@ -3,6 +3,10 @@ package org.example;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.example.IXInputDevice.IXInputDevice;
+import org.example.IXInputDevice.XInputDevice14Wrapper;
+import org.example.IXInputDevice.XInputDeviceWrapper;
+
 import com.github.strikerx3.jxinput.XInputAxes;
 import com.github.strikerx3.jxinput.XInputButtons;
 import com.github.strikerx3.jxinput.XInputComponents;
@@ -16,26 +20,28 @@ import lombok.Getter;
 @Getter
 public class GamepadInput {
 
+    private int vibrationStrength = 32767;
+    
     private int     countdown;
-    private int     vibrationStrength = 32767;
-
-    private Boolean isTimerRunning    = false;
     private Timer   timer;
-
     private String  errorMessage;
+    private Boolean isErrorAppeared;
+    private Boolean isTimerRunning;
 
     private Boolean isButtonPressedA, isButtonPressedB, 
                     isButtonPressedX, isButtonPressedY;
     
-    private Boolean isButtonPressedArrowUp, isButtonPressedArrowDown, 
+    private Boolean isButtonPressedArrowUp,   isButtonPressedArrowDown, 
                     isButtonPressedArrowLeft, isButtonPressedArrowRight;
 
+    private Boolean isButtonPressedBack,  isButtonPressedStart,
+                    isButtonPressedGuide, isButtonPressedUnknown;
+
     private Boolean isButtonPressedLeftBumper, isButtonPressedRightBumper;
-    private Boolean isButtonPressedLS, isButtonPressedRS;
-    private Boolean isButtonPressedBack, isButtonPressedStart;
-    private Boolean isButtonPressedGuide, isButtonPressedUnknown;
-    private float   leftStickAxisX, leftStickAxisY;
-    private float   rightStickAxisX, rightStickAxisY;
+    private Boolean isButtonPressedLS,         isButtonPressedRS;
+    
+    private float   leftStickAxisX,     leftStickAxisY;
+    private float   rightStickAxisX,    rightStickAxisY;
     private int     leftTriggerRawData, rightTriggerRawData;
     
     private void startTimer() {
@@ -77,70 +83,88 @@ public class GamepadInput {
     public void setVibrationStrength(int vibrationStrength) {
         this.vibrationStrength = vibrationStrength;
     }
-    
-    public boolean isXInputAvailable() {
-        if (XInputDevice.isAvailable() || XInputDevice14.isAvailable()) {
-            return true;
-        }
 
-        errorMessage = "Не поддерживаются необходимые протоколы XInput";
-        return false;
+    private Boolean checkControllerConnection(IXInputDevice device) {
+        if (!device.isConnected()) {
+            return false;
+        }
+        
+        return true;
+    }
+
+    private IXInputDevice selectDevice() throws XInputNotLoadedException {
+        if (XInputDevice.isAvailable()) {
+            return new XInputDeviceWrapper(XInputDevice.getDeviceFor(0));
+        }
+        if (XInputDevice14.isAvailable()) {
+            return new XInputDevice14Wrapper(XInputDevice14.getDeviceFor(0));
+        }
+        return null;        
     }
 
     public void handleXInput() throws XInputNotLoadedException {
-        XInputDevice device = XInputDevice.getDeviceFor(0);
-    
-        if (device.isConnected()) {
+        IXInputDevice device = selectDevice();
 
-            XInputComponents components = device.getComponents();
-            XInputButtons    buttons    = components.getButtons();
-            XInputAxes       axes       = components.getAxes();
+        if (device == null) {
+            isErrorAppeared = true;
+            errorMessage    = "Не поддерживаются необходимые протоколы XInput";
+            return;
+        }
 
-            if (device.poll()) {
+        if (!checkControllerConnection(device)) {
+            isErrorAppeared = true;
+            errorMessage    = "Контроллер не подключен";
+            return;
+        }
 
-                leftTriggerRawData  = axes.getRaw(XInputAxis.LEFT_TRIGGER);
-                rightTriggerRawData = axes.getRaw(XInputAxis.RIGHT_TRIGGER);
+        XInputComponents components = device.getComponents();
+        XInputButtons    buttons    = components.getButtons();
+        XInputAxes       axes       = components.getAxes();
 
-                leftStickAxisX = axes.get(XInputAxis.LEFT_THUMBSTICK_X);
-                leftStickAxisY = axes.get(XInputAxis.LEFT_THUMBSTICK_Y);
-                
-                rightStickAxisX = axes.get(XInputAxis.RIGHT_THUMBSTICK_X);
-                rightStickAxisY = axes.get(XInputAxis.RIGHT_THUMBSTICK_Y);
+        if (device.poll()) {
 
-                isButtonPressedA = buttons.a ? true : false;
-                isButtonPressedB = buttons.b ? true : false;
-                isButtonPressedX = buttons.x ? true : false;
-                isButtonPressedY = buttons.y ? true : false;
+            leftTriggerRawData  = axes.getRaw(XInputAxis.LEFT_TRIGGER);
+            rightTriggerRawData = axes.getRaw(XInputAxis.RIGHT_TRIGGER);
 
-                isButtonPressedLS = buttons.lThumb ? true : false;
-                isButtonPressedRS = buttons.rThumb ? true : false;
+            leftStickAxisX = axes.get(XInputAxis.LEFT_THUMBSTICK_X);
+            leftStickAxisY = axes.get(XInputAxis.LEFT_THUMBSTICK_Y);
+            
+            rightStickAxisX = axes.get(XInputAxis.RIGHT_THUMBSTICK_X);
+            rightStickAxisY = axes.get(XInputAxis.RIGHT_THUMBSTICK_Y);
 
-                isButtonPressedBack  = buttons.back ? true : false;
-                isButtonPressedStart = buttons.start ? true : false;
+            isButtonPressedA = buttons.a ? true : false;
+            isButtonPressedB = buttons.b ? true : false;
+            isButtonPressedX = buttons.x ? true : false;
+            isButtonPressedY = buttons.y ? true : false;
 
-                isButtonPressedGuide   = buttons.guide ? true : false;
-                isButtonPressedUnknown = buttons.unknown ? true : false;
+            isButtonPressedLS = buttons.lThumb ? true : false;
+            isButtonPressedRS = buttons.rThumb ? true : false;
 
-                isButtonPressedArrowUp    = buttons.up ? true : false;
-                isButtonPressedArrowDown  = buttons.down ? true : false;
-                isButtonPressedArrowLeft  = buttons.left ? true : false;
-                isButtonPressedArrowRight = buttons.right ? true : false;
+            isButtonPressedBack  = buttons.back ? true : false;
+            isButtonPressedStart = buttons.start ? true : false;
 
-                isButtonPressedLeftBumper  = buttons.lShoulder ? true : false;
-                isButtonPressedRightBumper = buttons.rShoulder ? true : false;
+            isButtonPressedGuide   = buttons.guide ? true : false;
+            isButtonPressedUnknown = buttons.unknown ? true : false;
 
-                // Вибрация по LB + RB
-                if (buttons.lShoulder && buttons.rShoulder) {
-                    int leftMotor  = vibrationStrength;
-                    int rightMotor = vibrationStrength;
+            isButtonPressedArrowUp    = buttons.up ? true : false;
+            isButtonPressedArrowDown  = buttons.down ? true : false;
+            isButtonPressedArrowLeft  = buttons.left ? true : false;
+            isButtonPressedArrowRight = buttons.right ? true : false;
 
-                    device.setVibration(leftMotor, rightMotor);
-                } else {
-                    device.setVibration(0, 0);
-                }
+            isButtonPressedLeftBumper  = buttons.lShoulder ? true : false;
+            isButtonPressedRightBumper = buttons.rShoulder ? true : false;
+
+            // Вибрация по LB + RB
+            if (isButtonPressedLeftBumper && isButtonPressedRightBumper) {
+                int leftMotor  = vibrationStrength;
+                int rightMotor = vibrationStrength;
+
+                device.setVibration(leftMotor, rightMotor);
+            } else {
+                device.setVibration(0, 0);
             }
-        } else {
-            errorMessage = "Контроллер не подключен";
+
+            isErrorAppeared = false;
         }
     }
 }
