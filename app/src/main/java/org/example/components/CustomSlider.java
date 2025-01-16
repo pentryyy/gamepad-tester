@@ -8,7 +8,7 @@ public class CustomSlider {
 
     private JSlider slider;
 
-    CustomSlider(int minimalValue, int maximumValue, int valueByDefault) {
+    public CustomSlider(int minimalValue, int maximumValue, int valueByDefault) {
         slider = new JSlider(minimalValue, maximumValue, valueByDefault);
 
         slider.setOrientation(SwingConstants.HORIZONTAL);

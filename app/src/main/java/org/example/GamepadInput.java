@@ -24,9 +24,10 @@ public class GamepadInput {
     
     private int     countdown;
     private Timer   timer;
+    private Boolean isTimerRunning;
+    
     private String  errorMessage;
     private Boolean isErrorAppeared;
-    private Boolean isTimerRunning;
 
     private Boolean isButtonPressedA, isButtonPressedB, 
                     isButtonPressedX, isButtonPressedY;
