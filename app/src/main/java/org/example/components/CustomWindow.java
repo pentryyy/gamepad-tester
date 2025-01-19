@@ -25,6 +25,9 @@ public class CustomWindow {
         this.height = height;
 
         initializeUI();
+    }
+
+    public void show() {
         frame.setVisible(true);
     }
 

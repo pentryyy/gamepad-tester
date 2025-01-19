@@ -2,9 +2,9 @@ package org.example;
 
 import javax.swing.SwingUtilities;
 
-
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -20,8 +20,11 @@ import org.example.components.RectangleWithLetter;
 import org.example.components.ShapeFromImage;
 
 public class App {
+    private static AtomicBoolean isPanelShowAllowed  = new AtomicBoolean(false);
+
     public static void main(String[] args) {
         
+        // Основная панель программы
         JPanel contentPanel = new JPanel();
         contentPanel.setBackground(Color.WHITE);
         contentPanel.setLayout(new BorderLayout());
@@ -78,11 +81,26 @@ public class App {
             vibrationInfo.setText("Вибрация на LB + RB (Сила вибрации " + customSlider.getValue() + " )");
         });
 
+        // Панель в случае ошибки
+        JPanel errorPanel = new JPanel();
+        errorPanel.setBackground(Color.WHITE);
+        errorPanel.setLayout(new BorderLayout());
+
+        JLabel errorInfo = new JLabel("Произошла ошибка!", SwingConstants.CENTER);
+        errorInfo.setBounds(260, 420, 280, 20);
+
         Thread gamepadThread = new Thread(() -> {
             try {
                 while (true) {
                     gamepadInput.handleXInput();
 
+                    // System.out.println(gamepadInput.getIsErrorAppeared());
+                    isPanelShowAllowed.set(gamepadInput.getIsErrorAppeared());
+                    if (gamepadInput.getIsErrorAppeared()) {
+                        errorInfo.setText("Произошла ошибка " + gamepadInput.getErrorMessage());
+                        continue;
+                    }
+                    
                     float leftStickAxisX = gamepadInput.getLeftStickAxisX();
                     float leftStickAxisY = gamepadInput.getLeftStickAxisY();
 
@@ -155,6 +173,8 @@ public class App {
         gamepadThread.start();
         Runtime.getRuntime().addShutdownHook(new Thread(gamepadThread::interrupt));
 
+        errorPanel.add(errorInfo);
+
         contentPanel.add(buttonA);
         contentPanel.add(buttonB);
         contentPanel.add(buttonX);
@@ -191,7 +211,13 @@ public class App {
         SwingUtilities.invokeLater(() -> {
             CustomWindow window = new CustomWindow(800, 600);
             
-            window.addContentPanel(contentPanel);
+            if (isPanelShowAllowed.get()) {
+                window.addContentPanel(errorPanel);
+            } else {
+                window.addContentPanel(contentPanel);
+            }
+           
+            window.show();
         });
     }
 }
