@@ -94,7 +94,6 @@ public class App {
                 while (true) {
                     gamepadInput.handleXInput();
 
-                    // System.out.println(gamepadInput.getIsErrorAppeared());
                     isPanelShowAllowed.set(gamepadInput.getIsErrorAppeared());
                     if (gamepadInput.getIsErrorAppeared()) {
                         errorInfo.setText("Произошла ошибка " + gamepadInput.getErrorMessage());
